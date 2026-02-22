@@ -1,6 +1,6 @@
 # Finance AI API
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-brightgreen) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688) ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-3.0.0-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-brightgreen) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **Developer:** Bhuvan Rai
 
@@ -148,18 +148,23 @@ Interactive docs: `http://localhost:8000/docs`
 
 ## 📋 Version History
 
-### v2.0.0 — Financial Intelligence Layer
+### v3.0.0 — Full Financial Intelligence Layer
 - Added **Analytics Engine**: net worth, goal feasibility, portfolio alignment
 - Added **Simulation Engine**: recession, job loss, rate hike stress testing
 - Added **User-Based Retrieval** with LLM-compressed persistent memory
 - CamelCase + snake_case dual input support across all models
 - Exponential backoff and rate-limit resilience on all Gemini calls
 
-### v1.0.0 — RAG Foundation
+### v2.0.0 — Conversational RAG & Health Scoring
 - Conversational RAG over financial/regulatory documents (ChromaDB + Gemini)
 - Follow-up question support via query contextualization
 - Deterministic Financial Health Score (5 components, 0–100)
 - Dual endpoints: `/ask` (answer only) and `/retrieve` (full audit trail)
+
+### v1.0.0 — RAG Foundation
+- Initial RAG pipeline with ChromaDB and Gemini embeddings
+- Document ingestion and chunking pipeline
+- Basic `/ask` endpoint
 
 ---
 
