@@ -1,6 +1,0 @@
-﻿9e351620a7ae665cb54211918b7c657f41f6d41b|v2.0.0: Financial Intelligence Layer
-049e29a10a1e6224ab112130d1b2bb962bd629de|added requirment.txt
-b0b180a24ee6c9b29b63253a3e4e26f67212c461|removed .env
-9bd5a83c4ecf17b4ef54d25a88e7c70b457010eb|removed env
-1fcd6d5fe5542c33b297cea3fe1fb33f5e1d6f93|Remove example environment variables from .env.example
-6f78b5e248ba7f9504e87dbd0114465e656de222|version 3 of the api model

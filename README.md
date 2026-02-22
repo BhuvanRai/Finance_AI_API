@@ -10,60 +10,42 @@ A professional, production-grade **Financial AI** service built with **FastAPI**
 
 ## 🚀 Endpoints
 
-### RAG (Advisory Engine)
+### 🔵 v1 — RAG Advisory Engine
 
-#### `POST /api/v1/rag/ask`
-Conversational RAG over ingested regulatory documents. Accepts optional `history` for follow-up questions. Returns cited answers (e.g., `[CHUNK 1]`).
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/rag/ask` | Conversational Q&A over ingested documents. Accepts optional `history` for follow-ups. Returns cited answer (`[CHUNK X]`). |
+| `POST` | `/api/v1/rag/retrieve` | Returns raw document chunks for auditing without generating an answer. |
+| `POST` | `/api/v1/score/financial-health` | Deterministic 0–100 financial health score across 5 components. No LLM. |
 
-#### `POST /api/v1/rag/retrieve`
-Returns raw document chunks for auditing and transparency, without generating an answer.
-
-#### `POST /api/v1/user-based-retrieval/`
-Full-profile personalized RAG. Injects the user's real financial numbers (income, savings, EMI, risk profile, goals) into the retrieval prompt. Returns an `answer` + an LLM-compressed `history` string for persistent conversational memory.
-
----
-
-### Scoring Engine
-
-#### `POST /api/v1/score/financial-health`
-Deterministic 0–100 score across 5 components. No LLM.
-
-| Component          | Max |
-|--------------------|-----|
-| Savings Rate       | 25  |
-| Emergency Fund     | 20  |
-| Debt Ratio         | 20  |
-| Diversification    | 15  |
-| Insurance Coverage | 20  |
+> **Scoring components:** Savings Rate (25) · Emergency Fund (20) · Debt Ratio (20) · Diversification (15) · Insurance Coverage (20)
 
 ---
 
-### Analytics Engine
+### 🟡 v2 — Personalized RAG
 
-#### `POST /api/v1/analytics/net-worth`
-Computes net worth, liquidity ratio (months of runway), asset allocation %, and debt-to-asset ratio.
-
-#### `POST /api/v1/analytics/goal-feasibility`
-Per-goal analysis using the Future Value of Annuity formula. Returns required SIP, funding gap, inflation-adjusted target, and goal risk score (`low` / `medium` / `high` / `critical`).
-
-#### `POST /api/v1/analytics/portfolio-alignment`
-Checks mismatch between declared `risk_profile` and actual asset allocation. Flags behavioral inconsistencies (e.g., aggressive investor holding 90% FD).
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/user-based-retrieval/` | Full-profile personalized RAG. Accepts complete financial profile (income, assets, liabilities, goals, insurance). Returns a cited `answer` + an LLM-compressed `history` string for persistent conversational memory. |
 
 ---
 
-### Simulation Engine
+### 🟢 v3 — Financial Intelligence Layer
 
-#### `POST /api/v1/simulate/stress-test`
-Simulates 3 financial shock scenarios:
-- **Recession**: 30% equity crash + 20% income drop
-- **Job Loss**: Primary salary income drops to zero
-- **Rate Hike**: All loan EMIs increase by 20%
-
-Returns monthly surplus/shortfall, months of runway, per-scenario verdict, and overall resilience (`LOW` / `MEDIUM` / `HIGH`).
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/analytics/net-worth` | Net worth, liquidity ratio (months of runway), asset allocation %, and debt-to-asset ratio. |
+| `POST` | `/api/v1/analytics/goal-feasibility` | Required SIP, funding gap, inflation-adjusted target, and goal risk score per active goal. |
+| `POST` | `/api/v1/analytics/portfolio-alignment` | Risk profile vs actual allocation mismatch — flags behavioral inconsistencies. |
+| `POST` | `/api/v1/simulate/stress-test` | Stress-tests 3 scenarios: Recession, Job Loss, Rate Hike. Returns runway months, verdict & overall resilience. |
 
 ---
 
-### `GET /api/v1/health` — Health Check
+### ⚪ System
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/health` | Service health check. |
 
 ---
 
