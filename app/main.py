@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.api.v1.api import api_router
+from app.api.v2.api import api_v2_router
+from app.api.v3.api import api_v3_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 
@@ -38,6 +40,8 @@ def get_application() -> FastAPI:
         }
 
     _app.include_router(api_router, prefix=settings.API_V1_STR)
+    _app.include_router(api_v2_router, prefix="/api/v2")
+    _app.include_router(api_v3_router, prefix="/api/v3")
 
     return _app
 

@@ -124,7 +124,7 @@ def calculate_financial_health(request: FinancialHealthRequest):
     emergency_score = _score_emergency_fund(liquid_assets, total_expense)
     debt_score = _score_debt_ratio(total_emi, total_income, request.liabilities)
     diversification_score = _score_diversification(asset_types)
-    insurance_score = _score_insurance(total_term_coverage, request.annual_income)
+    insurance_score = _score_insurance(total_term_coverage, request.user.annual_income or 0)
 
     # --- Final Score (clamped 0–100) ---
     final_score = max(
@@ -141,7 +141,7 @@ def calculate_financial_health(request: FinancialHealthRequest):
 
     return FinancialHealthResponse(
         financial_health_score=FinancialHealthScore(
-            user=request.user_id,
+            user=request.user.name or "Unknown",
             score=final_score,
             breakdown=ScoreBreakdown(
                 savings_rate=savings_score,

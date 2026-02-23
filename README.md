@@ -10,13 +10,17 @@ A professional, production-grade **Financial AI** service built with **FastAPI**
 
 ## 🚀 Endpoints
 
-### 🔵 v1 — RAG Advisory Engine
+### 🔵 v1 — RAG Advisory Engine + Scoring + Analytics + Simulation
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/v1/rag/ask` | Conversational Q&A over ingested documents. Accepts optional `history` for follow-ups. Returns cited answer (`[CHUNK X]`). |
 | `POST` | `/api/v1/rag/retrieve` | Returns raw document chunks for auditing without generating an answer. |
-| `POST` | `/api/v1/score/financial-health` | Deterministic 0–100 financial health score across 5 components. No LLM. |
+| `POST` | `/api/v1/score/financial-health` | Deterministic 0–100 financial health score. Accepts `{ user, incomes, expenses, assets, liabilities, insurances, financialGoals }`. |
+| `POST` | `/api/v1/analytics/net-worth` | Net worth, liquidity ratio, asset allocation %, debt-to-asset ratio. Accepts `{ userId, assets, liabilities }`. |
+| `POST` | `/api/v1/analytics/goal-feasibility` | Required SIP, funding gap, goal risk per goal. Accepts `{ userId, incomes, expenses, financialGoals }`. |
+| `POST` | `/api/v1/analytics/portfolio-alignment` | Risk profile vs actual allocation mismatch. Accepts `{ userId, riskProfile, assets }`. |
+| `POST` | `/api/v1/simulate/stress-test` | Recession, Job Loss, Rate Hike scenarios. Accepts `{ userId, incomes, expenses, assets, liabilities }`. |
 
 > **Scoring components:** Savings Rate (25) · Emergency Fund (20) · Debt Ratio (20) · Diversification (15) · Insurance Coverage (20)
 
@@ -26,18 +30,13 @@ A professional, production-grade **Financial AI** service built with **FastAPI**
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/user-based-retrieval/` | Full-profile personalized RAG. Accepts complete financial profile (income, assets, liabilities, goals, insurance). Returns a cited `answer` + an LLM-compressed `history` string for persistent conversational memory. |
+| `POST` | `/api/v2/user-based-retrieval/` | Full-profile personalized RAG. Accepts complete financial profile (income, assets, liabilities, goals, insurance). Returns a cited `answer` + an LLM-compressed `history` string for persistent conversational memory. |
 
 ---
 
-### 🟢 v3 — Financial Intelligence Layer
+### 🟢 v3 — Financial Intelligence Layer *(also available at v1)*
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/analytics/net-worth` | Net worth, liquidity ratio (months of runway), asset allocation %, and debt-to-asset ratio. |
-| `POST` | `/api/v1/analytics/goal-feasibility` | Required SIP, funding gap, inflation-adjusted target, and goal risk score per active goal. |
-| `POST` | `/api/v1/analytics/portfolio-alignment` | Risk profile vs actual allocation mismatch — flags behavioral inconsistencies. |
-| `POST` | `/api/v1/simulate/stress-test` | Stress-tests 3 scenarios: Recession, Job Loss, Rate Hike. Returns runway months, verdict & overall resilience. |
+> All v3 analytics and simulation endpoints are registered at both `/api/v1/` (for backend compatibility) and `/api/v3/` (for semantic versioning).
 
 ---
 
