@@ -18,11 +18,11 @@ def run_stress_test(
     assets: List[AssetItem],
     liabilities: List[LiabilityItem],
 ) -> Dict[str, Any]:
-    total_income = sum(i.monthly_amount for i in incomes if i.is_active)
-    total_expense = sum(e.monthly_amount for e in expenses)
-    total_emi = sum(l.emi_amount for l in liabilities)
-    total_assets = sum(a.current_value for a in assets)
-    liquid_assets = sum(a.current_value for a in assets if a.liquidity_level == "high")
+    total_income = sum((i.monthly_amount or 0) for i in incomes if (i.is_active if i.is_active is not None else True))
+    total_expense = sum((e.monthly_amount or 0) for e in expenses)
+    total_emi = sum((l.emi_amount or 0) for l in liabilities)
+    total_assets = sum((a.current_value or 0) for a in assets)
+    liquid_assets = sum((a.current_value or 0) for a in assets if (a.liquidity_level or "") == "high")
     normal_surplus = total_income - total_expense
 
     results: Dict[str, Any] = {}
@@ -30,9 +30,9 @@ def run_stress_test(
     # ── Scenario 1: Recession ───────────────────────────────────────────
     # Equity/crypto drop 30%, income drops 20%, expenses stay flat
     recession_asset_loss = sum(
-        a.current_value * 0.30
+        (a.current_value or 0) * 0.30
         for a in assets
-        if a.type in ("stock", "mutual_fund", "crypto")
+        if (a.type or "") in ("stock", "mutual_fund", "crypto")
     )
     recession_income = total_income * 0.80
     recession_surplus = recession_income - total_expense
@@ -49,8 +49,8 @@ def run_stress_test(
     # ── Scenario 2: Job Loss ────────────────────────────────────────────
     # Primary income (salary) drops to 0, only other sources remain
     non_salary_income = sum(
-        i.monthly_amount for i in incomes
-        if i.is_active and i.source_type != "salary"
+        (i.monthly_amount or 0) for i in incomes
+        if (i.is_active if i.is_active is not None else True) and (i.source_type or "") != "salary"
     )
     job_loss_surplus = non_salary_income - total_expense
     results["job_loss"] = {

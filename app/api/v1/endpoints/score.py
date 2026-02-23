@@ -78,18 +78,32 @@ def _score_diversification(asset_types: set) -> int:
     return 0
 
 
-def _score_insurance(total_term_coverage: float, annual_income: float) -> int:
-    """Score term insurance coverage out of 20."""
-    if annual_income <= 0:
+def _score_insurance(total_term_coverage: float, annual_income: float, total_all_coverage: float) -> int:
+    """Score insurance coverage out of 20.
+    Uses term-to-income ratio when income is available.
+    Falls back to raw total coverage when income is 0.
+    """
+    if annual_income > 0:
+        ratio = total_term_coverage / annual_income
+        if ratio >= 10:
+            return 20
+        elif ratio >= 5:
+            return 15
+        elif ratio >= 2:
+            return 8
+        # Has income but low/no term insurance — check any coverage
+        if total_all_coverage > 0:
+            return 4
         return 0
-    ratio = total_term_coverage / annual_income
-    if ratio >= 10:
-        return 20
-    elif ratio >= 5:
-        return 15
-    elif ratio >= 2:
-        return 8
-    return 0
+    else:
+        # No income data — score based on whether any insurance exists
+        if total_all_coverage >= 2_000_000:
+            return 15
+        elif total_all_coverage >= 500_000:
+            return 10
+        elif total_all_coverage > 0:
+            return 5
+        return 0
 
 
 @router.post("/financial-health", response_model=FinancialHealthResponse)
@@ -100,31 +114,36 @@ def calculate_financial_health(request: FinancialHealthRequest):
     """
     # --- Aggregate Inputs ---
     total_income = sum(
-        inc.monthly_amount for inc in request.incomes if inc.is_active
+        (inc.monthly_amount or 0) for inc in request.incomes if (inc.is_active or True)
     )
-    total_expense = sum(exp.monthly_amount for exp in request.expenses)
+    total_expense = sum((exp.monthly_amount or 0) for exp in request.expenses)
 
     liquid_assets = sum(
-        ast.current_value
+        (ast.current_value or 0)
         for ast in request.assets
-        if ast.liquidity_level == "high"
+        if (ast.liquidity_level or "") == "high"
     )
-    asset_types = {ast.type for ast in request.assets}
+    asset_types = {ast.type for ast in request.assets if ast.type}
 
-    total_emi = sum(lib.emi_amount for lib in request.liabilities)
+    total_emi = sum((lib.emi_amount or 0) for lib in request.liabilities)
 
     total_term_coverage = sum(
-        ins.coverage_amount
+        (ins.coverage_amount or 0)
         for ins in request.insurances
-        if ins.type == "term"
+        if (ins.type or "") == "term"
     )
+    total_all_coverage = sum((ins.coverage_amount or 0) for ins in request.insurances)
 
     # --- Score Each Component ---
     savings_score = _score_savings_rate(total_income, total_expense)
     emergency_score = _score_emergency_fund(liquid_assets, total_expense)
     debt_score = _score_debt_ratio(total_emi, total_income, request.liabilities)
     diversification_score = _score_diversification(asset_types)
-    insurance_score = _score_insurance(total_term_coverage, request.user.annual_income or 0)
+    insurance_score = _score_insurance(
+        total_term_coverage,
+        request.user.annual_income or 0,
+        total_all_coverage,
+    )
 
     # --- Final Score (clamped 0–100) ---
     final_score = max(

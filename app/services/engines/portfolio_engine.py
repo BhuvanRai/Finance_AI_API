@@ -35,15 +35,15 @@ def check_portfolio_alignment(
     assets: List[AssetItem],
 ) -> Dict[str, Any]:
     profile = risk_profile.lower()
-    total_value = sum(a.current_value for a in assets)
+    total_value = sum((a.current_value or 0) for a in assets)
 
     if total_value == 0:
         return {"error": "No assets provided for alignment check."}
 
     # Compute actual allocation by bucket
-    high_risk_val = sum(a.current_value for a in assets if a.type in _HIGH_RISK_TYPES)
-    medium_risk_val = sum(a.current_value for a in assets if a.type in _MEDIUM_RISK_TYPES)
-    low_risk_val = sum(a.current_value for a in assets if a.type in _LOW_RISK_TYPES)
+    high_risk_val = sum((a.current_value or 0) for a in assets if (a.type or "") in _HIGH_RISK_TYPES)
+    medium_risk_val = sum((a.current_value or 0) for a in assets if (a.type or "") in _MEDIUM_RISK_TYPES)
+    low_risk_val = sum((a.current_value or 0) for a in assets if (a.type or "") in _LOW_RISK_TYPES)
 
     actual = {
         "high_risk_pct": round(high_risk_val / total_value * 100, 1),
@@ -67,7 +67,7 @@ def check_portfolio_alignment(
         flags.append(f"Over-concentrated in low-risk assets ({actual['low_risk_pct']}%) — typical for defensive investors, not {profile}.")
 
     # Crypto-specific flag for conservative
-    crypto_val = sum(a.current_value for a in assets if a.type == "crypto")
+    crypto_val = sum((a.current_value or 0) for a in assets if (a.type or "") == "crypto")
     crypto_pct = round(crypto_val / total_value * 100, 1)
     if profile == "conservative" and crypto_pct > 5:
         flags.append(f"Conservative profile holding {crypto_pct}% crypto — high behavioral inconsistency.")

@@ -10,21 +10,22 @@ def compute_net_worth(
     assets: List[AssetItem],
     liabilities: List[LiabilityItem],
 ) -> Dict[str, Any]:
-    total_assets = sum(a.current_value for a in assets)
-    total_liabilities = sum(l.outstanding_amount for l in liabilities)
+    total_assets = sum((a.current_value or 0) for a in assets)
+    total_liabilities = sum((l.outstanding_amount or 0) for l in liabilities)
     net_worth = total_assets - total_liabilities
 
     # Liquidity ratio: high-liquidity assets / total monthly liabilities (EMI)
-    liquid_assets = sum(a.current_value for a in assets if a.liquidity_level == "high")
-    total_emi = sum(l.emi_amount for l in liabilities)
+    liquid_assets = sum((a.current_value or 0) for a in assets if (a.liquidity_level or "") == "high")
+    total_emi = sum((l.emi_amount or 0) for l in liabilities)
     liquidity_ratio = round(liquid_assets / total_emi, 2) if total_emi > 0 else None
 
     # Asset allocation %
     allocation: Dict[str, float] = {}
     if total_assets > 0:
         for asset in assets:
-            allocation[asset.type] = round(
-                allocation.get(asset.type, 0) + (asset.current_value / total_assets) * 100, 2
+            atype = asset.type or "other"
+            allocation[atype] = round(
+                allocation.get(atype, 0) + ((asset.current_value or 0) / total_assets) * 100, 2
             )
 
     # Debt-to-asset ratio

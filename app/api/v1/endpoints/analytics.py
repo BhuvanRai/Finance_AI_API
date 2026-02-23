@@ -33,12 +33,12 @@ class _GoalItemAdapter:
     """Adapter so goal_engine.py receives objects with the right attribute names."""
     def __init__(self, g: FinancialGoalItem):
         self.goal_type = g.goal_type
-        self.target_amount = g.target_amount
-        self.target_date = date.fromisoformat(g.target_date)
+        self.target_amount = g.target_amount or 0.0
+        self.target_date = date.fromisoformat(g.target_date) if g.target_date else None
         self.priority_level = g.priority_level
         self.inflation_rate = g.inflation_rate or 6.0
         self.current_savings_for_goal = g.current_savings_for_goal or 0.0
-        self.status = g.status
+        self.status = g.status or "active"
 
 
 class PortfolioAlignmentRequest(CamelModel):
@@ -70,7 +70,11 @@ def goal_feasibility(req: GoalFeasibilityRequest):
     Backend: POST { userId, incomes, expenses, financialGoals }
     """
     try:
-        adapted_goals = [_GoalItemAdapter(g) for g in req.financial_goals]
+        # Skip goals with no target_date — cannot compute SIP without a timeline
+        adapted_goals = [
+            _GoalItemAdapter(g) for g in req.financial_goals
+            if g.target_date is not None
+        ]
         result = compute_goal_feasibility(adapted_goals, req.incomes, req.expenses)
         return {"user_id": req.user_id, "goal_feasibility": result}
     except Exception as e:

@@ -66,7 +66,10 @@ def compute_goal_feasibility(
     results = []
 
     for goal in goals:
-        if goal.status != "active":
+        if (goal.status or "active") != "active":
+            continue
+        # Skip goals with no date or zero target — nothing to compute
+        if goal.target_date is None or (goal.target_amount or 0) <= 0:
             continue
 
         delta = goal.target_date - today

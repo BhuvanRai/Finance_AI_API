@@ -30,24 +30,24 @@ class UserProfile(CamelModel):
 
 class IncomeItem(CamelModel):
     source_type: Optional[str] = "salary"
-    monthly_amount: float
+    monthly_amount: Optional[float] = 0.0
     growth_rate: Optional[float] = 0.0
-    is_active: bool = True
+    is_active: Optional[bool] = True
 
 
 class ExpenseItem(CamelModel):
     category: Optional[str] = "other"
-    monthly_amount: float
+    monthly_amount: Optional[float] = 0.0
     type: Optional[str] = "fixed"
 
 
 class AssetItem(CamelModel):
-    type: str                          # stock|mutual_fund|crypto|fd|real_estate|gold
+    type: Optional[str] = "other"      # stock|mutual_fund|crypto|fd|real_estate|gold
     name: Optional[str] = ""
-    current_value: float
+    current_value: Optional[float] = 0.0
     invested_amount: Optional[float] = 0.0
     expected_return_rate: Optional[float] = 0.0
-    liquidity_level: str               # high|medium|low
+    liquidity_level: Optional[str] = "low"  # high|medium|low
 
 
 class LiabilityItem(CamelModel):
@@ -55,22 +55,22 @@ class LiabilityItem(CamelModel):
     principal_amount: Optional[float] = 0.0
     outstanding_amount: Optional[float] = 0.0
     interest_rate: Optional[float] = 0.0
-    emi_amount: float
+    emi_amount: Optional[float] = 0.0
     tenure_remaining: Optional[int] = 0
 
 
 class InsuranceItem(CamelModel):
-    type: str                          # term|health|vehicle|life
+    type: Optional[str] = "other"      # term|health|vehicle|life
     provider: Optional[str] = None
-    coverage_amount: float
+    coverage_amount: Optional[float] = 0.0
     premium_amount: Optional[float] = 0.0
     maturity_date: Optional[str] = None
 
 
 class FinancialGoalItem(CamelModel):
     goal_type: Optional[str] = "other"
-    target_amount: float
-    target_date: str                   # ISO date string e.g. "2032-12-31"
+    target_amount: Optional[float] = 0.0
+    target_date: Optional[str] = None  # ISO date string e.g. "2032-12-31"
     priority_level: Optional[str] = "medium"
     inflation_rate: Optional[float] = 6.0
     current_savings_for_goal: Optional[float] = 0.0
