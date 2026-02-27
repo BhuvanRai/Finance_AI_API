@@ -138,37 +138,45 @@ Expanded Query:"""
 
     async def contextualize_query(self, query: str, history: List[Dict[str, str]]) -> str:
         """
-        Two-stage: 
-        1. Rewrite follow-up as standalone if history exists.
-        2. Augment the (rewritten) query for better recall.
+        If history exists, rewrite follow-up as a standalone expanded query (1 combined LLM call).
+        If no history, just augment the query (1 LLM call).
+        This reduces API calls from 2 to 1 for follow-up queries.
         """
-        standalone = query
+        if not history:
+            return await self.augment_query(query)
 
-        if history:
-            history_text = ""
-            for turn in history[-3:]:  # last 3 turns only
-                role = "User" if turn["role"] == "user" else "Assistant"
-                history_text += f"{role}: {turn['content']}\n"
+        history_text = ""
+        for turn in history[-3:]:  # last 3 turns only
+            role = "User" if turn["role"] == "user" else "Assistant"
+            history_text += f"{role}: {turn['content']}\n"
 
-            prompt = f"""Given this conversation history and a follow-up question, \
-rewrite the follow-up into a STANDALONE question that is fully self-contained \
-(understandable without the history). If already standalone, return it EXACTLY as-is.
+        prompt = f"""You are a financial search query optimizer.
+Given this conversation history and a new follow-up question, rewrite the follow-up into a \
+STANDALONE question that is fully self-contained AND expand it with relevant financial terms \
+to retrieve the best documents from a financial knowledge base.
+
+Rules:
+1. Make the question understandable without history.
+2. Keep the original intent INTACT.
+3. Add 3-6 related financial terms, regulation names, or concepts.
+4. Output ONLY the finalized expanded query — nothing else, no explanations.
 
 Conversation History:
 {history_text}
 
 Follow-up Question: {query}
 
-Standalone Question:"""
-            try:
-                rewritten = await self._call_llm(prompt, max_tokens=120, temperature=0.0)
-                if rewritten:
-                    standalone = rewritten
-            except Exception:
-                pass  # fall back to original
-
-        # Always augment for better recall
-        return await self.augment_query(standalone)
+Standalone Expanded Query:"""
+        try:
+            rewritten_expanded = await self._call_llm(prompt, max_tokens=150, temperature=0.0)
+            if rewritten_expanded and len(rewritten_expanded) > 5:
+                return rewritten_expanded
+        except Exception as e:
+            logger.warning(f"Contextualize & augment failed, using original: {e}")
+            pass
+            
+        # Fallback if the combined prompt fails
+        return query
 
     async def generate_answer(
         self,
@@ -289,53 +297,21 @@ Answer:"""
         answer: str,
     ) -> str:
         """
-        Creates a rolling history log. Summarizes the LATEST turn and appends it to the previous history.
-        Does NOT store the profile snapshot in the history, as the backend passes it in every request.
+        Creates a rolling history log. Just appends the raw Q&A turn to the previous history.
+        This completely eliminates the 1 LLM call used for summarization, saving cost and time.
         """
-        prompt = f"""You are a conversation summarizer.
-
-Summarize the user's latest query and your answer into a concise format.
-Do NOT include the user's financial profile, income, or demographic details (these are maintained separately).
-Only capture the core intent of the question asked and the core advice/answer given.
-Keep the summary under 100 words.
-
-Latest Exchange:
-Q: {query}
-A: {answer}
-
-Output MUST strictly follow this format (no intro/outro text):
-[Q]: <summarized question>
-[A]: <summarized answer>
-"""
-
-        max_retries = 3
-        delay = 2
-        summarized_turn = f"[Q]: {query[:150]}\n[A]: {answer[:300]}"
+        # We just keep it simple without any LLM call to save tokens and latency.
+        # Ensure we don't store massive amounts of text by taking the first 150 chars of Q and 300 of A.
+        clean_q = query[:150].replace('\n', ' ')
+        clean_a = answer[:300].replace('\n', ' ')
+        raw_turn = f"[Q]: {clean_q}\n[A]: {clean_a}"
         
-        for attempt in range(max_retries):
-            try:
-                result = await self._call_llm(prompt, max_tokens=150, temperature=0.1)
-                # Ensure the format is somewhat maintained
-                if "[Q]:" in result and "[A]:" in result:
-                    summarized_turn = result.strip()
-                break
-            except Exception as e:
-                if ("429" in str(e) or "ResourceExhausted" in str(e)) and attempt < max_retries - 1:
-                    logger.warning(f"Rate limit hit (compress_history). Retrying in {delay}s...")
-                    await asyncio.sleep(delay)
-                    delay *= 2
-                    continue
-                logger.error(f"compress_history error: {e}")
-                break
-
-        # Append to previous history, limit to recent 8 turns (16 lines) just to prevent infinite growth 
-        # but keeping it "more longer" than before.
         if previous_history:
             lines = previous_history.strip().split('\n')
             # Keep the last 16 lines (8 Q&A turns)
             if len(lines) > 16:
                 lines = lines[-16:]
             kept_history = "\n".join(lines)
-            return f"{kept_history}\n{summarized_turn}"
+            return f"{kept_history}\n{raw_turn}"
         else:
-            return summarized_turn
+            return raw_turn
