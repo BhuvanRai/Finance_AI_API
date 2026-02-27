@@ -27,7 +27,7 @@ class ChromaClient:
         )
         logger.info(f"Added {len(ids)} documents to ChromaDB")
 
-    def query(self, query_vector: List[float], top_k: int = 5) -> Dict[str, Any]:
+    def query(self, query_vector: List[float], top_k: int = 7) -> Dict[str, Any]:
         """Query the collection."""
         results = self.collection.query(
             query_embeddings=[query_vector],

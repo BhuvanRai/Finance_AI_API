@@ -23,7 +23,7 @@ dependencies = [
 
 [tool.poetry]
 name = "finance-ai-api"
-version = "0.1.0"
+version = "0.3.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 
